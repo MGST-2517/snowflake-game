@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#2a1850">
+  <title>Catch the Snowflakes ❄️</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="sky" aria-hidden="true"><div id="stars"></div></div>
+
+  <main id="stage" class="stage">
+    <header class="hud">
+      <div class="stats">
+        <div class="stat"><span class="label">Score</span><span id="score" class="value">0</span></div>
+        <div class="stat"><span id="timeLabel" class="label">Time</span><span id="time" class="value">90</span></div>
+        <div class="stat"><span class="label">Best</span><span id="best" class="value">0</span></div>
+      </div>
+      <div class="controls">
+        <button id="pauseBtn" class="icon-btn" type="button" aria-label="Pause game" disabled>⏸</button>
+        <button id="restartBtn" class="icon-btn" type="button" aria-label="Restart game" disabled>↻</button>
+        <button id="muteBtn" class="icon-btn" type="button" aria-label="Mute sound" aria-pressed="false">🔊</button>
+      </div>
+    </header>
+    <div id="meter" class="meter" role="progressbar" aria-label="Progress to the goal" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <div id="meterFill"></div><i class="tick" style="left:33.3%"></i><i class="tick" style="left:66.6%"></i>
+    </div>
+
+    <div class="status" aria-hidden="true">
+      <span id="comboBadge" class="badge combo" hidden></span>
+      <span id="slowBadge" class="badge slow" hidden>❄ Slow-mo <b id="slowSecs"></b><i class="bar"><u id="slowBar"></u></i></span>
+      <span id="multiBadge" class="badge multi" hidden>✦ Double points <b id="multiSecs"></b><i class="bar"><u id="multiBar"></u></i></span>
+    </div>
+    <div id="comboText" class="combo-text" aria-hidden="true"></div>
+    <div id="banner" class="banner" aria-hidden="true"></div>
+    <p id="sr" class="sr-only" aria-live="polite"></p>
+
+    <canvas id="scene" aria-hidden="true"></canvas>
+    <canvas id="game" role="img" aria-label="Game area: move the basket left and right to catch falling snowflakes"></canvas>
+
+    <section id="startOverlay" class="overlay" aria-labelledby="startTitle">
+      <div class="card">
+        <p class="spark" aria-hidden="true">✦ ❄ ✦</p>
+        <p id="universeTitle" class="universe"></p>
+        <h1 id="startTitle">Catch the Snowflakes</h1>
+        <p id="introLine" class="intro"></p>
+        <p class="for-name"><span id="forName" class="nm"></span></p>
+        <p id="inviteLine" class="invite"></p>
+        <div class="modes" role="group" aria-label="Game mode">
+          <button id="modeStd" class="mode" type="button" aria-pressed="true"><b>Standard</b><span id="modeStdNote">90 seconds</span></button>
+          <button id="modeRelax" class="mode" type="button" aria-pressed="false"><b>Relaxed</b><span>No timer</span></button>
+        </div>
+        <p id="modeNote" class="mode-note"></p>
+        <button id="startBtn" class="btn" type="button">Start Game</button>
+        <button id="startBookBtn" class="btn ghost" type="button" hidden></button>
+        <p>Slide the magic basket and catch the falling snowflakes. Golden ones are worth 50.</p>
+        <ul class="rules">
+          <li><b>❄</b> 10 points &nbsp; <b class="g">❄</b> golden 50 &nbsp; <b class="h">❤</b> heart +20</li>
+          <li><b>⏳</b> Slow-mo calms the snow for 5 s &nbsp; <b class="g">x2</b> doubles points for 6 s</li>
+          <li><b>Combo:</b> keep catching to build it. Every 5th catch pays a bonus. Miss 3 in a row and it resets.</li>
+        </ul>
+        <p class="hint">Arrow keys, A / D, mouse, or drag with your finger. P pauses.</p>
+        <p class="credit">Made with love for <span id="creditName" class="nm"></span> ❤</p>
+      </div>
+    </section>
+
+    <section id="pauseOverlay" class="overlay" hidden aria-labelledby="pauseTitle">
+      <div class="card">
+        <p class="spark" aria-hidden="true">✦ Take a breath ✦</p>
+        <h2 id="pauseTitle">Paused</h2>
+        <button id="resumeBtn" class="btn" type="button">Resume</button>
+        <button id="pauseRestartBtn" class="btn ghost" type="button">Restart</button>
+        <button id="pauseBookBtn" class="btn ghost" type="button" hidden></button>
+        <p class="hint">Press P or Esc to resume</p>
+      </div>
+    </section>
+
+    <section id="overOverlay" class="overlay" hidden aria-labelledby="overTitle">
+      <div class="card">
+        <p class="spark" aria-hidden="true">✦ Round complete ✦</p>
+        <h2 id="overTitle">Time's up!</h2>
+        <p class="big" id="overScore">0</p>
+        <p id="overNote">points.</p>
+        <button id="againBtn" class="btn" type="button">Play Again</button>
+        <button id="overBookBtn" class="btn ghost" type="button" hidden></button>
+        <button id="overModeBtn" class="btn ghost" type="button">Change mode</button>
+      </div>
+    </section>
+
+    <section id="winOverlay" class="overlay win" hidden aria-labelledby="winTitle">
+      <div id="confetti" aria-hidden="true"></div>
+      <div class="card glow">
+        <p class="achievement"><span>✦ Achievement unlocked ✦</span><strong id="achTitle"></strong></p>
+        <h2 id="winTitle"></h2>
+        <p id="winMessage" class="message"></p>
+        <p class="hint">Final score: <strong id="winScore">0</strong></p>
+        <p id="winNote" class="hint"></p>
+        <button id="winAgainBtn" class="btn" type="button">Play Again</button>
+        <button id="winBookBtn" class="btn ghost" type="button" hidden></button>
+        <button id="winModeBtn" class="btn ghost" type="button">Change mode</button>
+        <p class="credit">Made with love for <span id="creditName2" class="nm"></span> ❤</p>
+      </div>
+    </section>
+
+    <section id="memoryOverlay" class="overlay memory" hidden aria-labelledby="memTitle">
+      <div class="card memory-card">
+        <div id="memMedia" class="mem-media">
+          <img id="memPhoto" class="mem-photo" alt="" hidden>
+          <canvas id="memCanvas" width="480" height="220" aria-hidden="true"></canvas>
+        </div>
+        <div class="mem-body">
+          <p id="memDate" class="mem-date"></p>
+          <h2 id="memTitle"></h2>
+          <p id="memStory" class="mem-story message"></p>
+          <p id="memCount" class="hint"></p>
+          <button id="memContinue" class="btn" type="button">Continue</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="bookOverlay" class="overlay" hidden aria-labelledby="bookTitle">
+      <div class="card map-card">
+        <p class="spark" aria-hidden="true">✦ Memory map ✦</p>
+        <h2 id="bookTitle">Our Little Universe</h2>
+        <div class="map">
+          <svg class="map-bg" viewBox="0 0 300 420" aria-hidden="true" focusable="false">
+            <defs>
+              <radialGradient id="haloGrad"><stop offset="0" stop-color="#ffd978" stop-opacity="0.75"/><stop offset="0.5" stop-color="#ffc2dd" stop-opacity="0.3"/><stop offset="1" stop-color="#ffc2dd" stop-opacity="0"/></radialGradient>
+              <radialGradient id="moonGrad"><stop offset="0" stop-color="#fff1f8" stop-opacity="0.85"/><stop offset="1" stop-color="#c9b8ff" stop-opacity="0"/></radialGradient>
+            </defs>
+            <g class="starp">
+              <circle cx="20" cy="22" r="1.2"/><circle cx="118" cy="14" r="1"/><circle cx="170" cy="48" r="1.3"/><circle cx="210" cy="86" r="1"/>
+              <circle cx="40" cy="96" r="1"/><circle cx="150" cy="150" r="1.2"/><circle cx="280" cy="160" r="1"/><circle cx="12" cy="180" r="1.2"/>
+              <circle cx="120" cy="236" r="1"/><circle cx="282" cy="244" r="1.3"/><circle cx="176" cy="322" r="1"/><circle cx="24" cy="300" r="1.1"/>
+            </g>
+            <circle cx="252" cy="30" r="34" fill="url(#moonGrad)"/><circle cx="252" cy="30" r="9" fill="#fff6fb"/>
+            <path class="ridge" d="M0 420 L0 404 L40 391 L80 407 L130 388 L180 405 L225 391 L265 406 L300 394 L300 420 Z"/>
+            <g class="pines">
+              <path d="M14 404 l9 -24 l9 24 z"/><path d="M34 406 l7 -18 l7 18 z"/><path d="M262 405 l9 -24 l9 24 z"/><path d="M282 407 l7 -18 l7 18 z"/>
+            </g>
+            <path id="seg1" class="seg" d="M66 34 C66 76 234 76 234 118"/>
+            <path id="seg2" class="seg" d="M234 118 C234 160 66 160 66 202"/>
+            <path id="seg3" class="seg" d="M66 202 C66 244 234 244 234 286"/>
+            <path id="seg4" class="seg" d="M234 286 C234 328 66 328 66 370"/>
+            <circle id="glow1" class="halo" cx="66" cy="34" r="34"/>
+            <circle id="glow2" class="halo" cx="234" cy="118" r="34"/>
+            <circle id="glow3" class="halo" cx="66" cy="202" r="34"/>
+            <circle id="glow4" class="halo" cx="234" cy="286" r="34"/>
+            <circle id="glow5" class="halo" cx="66" cy="370" r="34"/>
+          </svg>
+          <ul id="bookList" class="book-list"></ul>
+        </div>
+        <div class="map-progress" aria-hidden="true"><i id="bookBar"></i></div>
+        <p id="bookHint" class="hint"></p>
+        <button id="bookBackBtn" class="btn" type="button">Back</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
